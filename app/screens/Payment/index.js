@@ -21,6 +21,10 @@ class Payment extends Component {
           icon_name: 'mada',
           type: 'MADA',
         },
+        {
+          icon_name: 'applepay',
+          type: 'APPLEPAY',
+        },
       ],
       selected_paymetType: 0,
 
@@ -39,13 +43,28 @@ class Payment extends Component {
   generateCheckoutID = async phoneNumber => {
     this.setState({loading: true});
 
+    let requestObj = {
+      "amount": "1.00",
+      "card_type": "applepay",
+      "address": {
+          "street": "str1",
+          "city": "Jeddah",
+          "state": "stat1"
+      }
+    };
     let data = await fetch(
-      'https://dev.hyperpay.com/hyperpay-demo/getcheckoutid.php?phoneNumber=' +
-        phoneNumber,
-    );
+      'http://192.168.1.104:3000/api/v1/payment/request-checkout',{
+             method: "POST",
+             headers: {
+               "content-type": "application/json",
+               "Authorization":"Bearer 09567c1b7a00e4231b1900679b64fece182926ba"
+             },
+             body: JSON.stringify(requestObj)
+         });
     let data_json = await data.json();
+    console.log("data_json",data_json);
     if (data.status == 200) {
-      await this.setState({checkoutID: data_json.id});
+      await this.setState({checkoutID: data_json.data.id});
     } else this.setState({loading: false});
   };
   onCheckOut = async () => {
@@ -133,10 +152,11 @@ class Payment extends Component {
     try {
       await this.generateCheckoutID();
 
+
       if (this.state.checkoutID) {
         const paymentParams = {
           checkoutID: this.state.checkoutID,
-          amount: 1.0,
+          amount: 1.0
         };
         console.log(
           '01',
@@ -149,11 +169,13 @@ class Payment extends Component {
         NativeModules.Hyperpay.applepayPayment(paymentParams)
           .then(transactionResult => {
             if (transactionResult) {
-              console.log('02', 'paymentParams', transactionResult);
-
+              console.log("02","transactionResult from hyperpay",transactionResult);
+              resourcePath = "?checkoutId=" + transactionResult.checkoutId + "&cardType="+ this.state.paymentType[3].icon_name;
+              this.getPaymentStatus(resourcePath);
+           
               if (transactionResult.status === 'completed') {
-                //  resourcePath = encodeURIComponent("/v1/checkouts/" + transactionResult.checkoutId + "/payment");
-                this.getPaymentStatus(transactionResult.checkoutId);
+                resourcePath = encodeURIComponent("?checkoutId=" + transactionResult.checkoutId + "cardType="+ this.state.paymentType[3].icon_name);
+                this.getPaymentStatus(resourcePath);
               } else {
                 return this.setState({loading: false}, () => {
                   global.openToast('The payment is not completed', 'e');
@@ -313,19 +335,18 @@ class Payment extends Component {
       //     body: JSON.stringify({ resourcePath })
       // })
       let url =
-        'https://dev.hyperpay.com/hyperpay-demo/getpaymentstatus.php?id=' +
+        'http://192.168.1.104:3000/api/v1/payment/status' +
         resourcePath;
       console.log('08', url);
 
       let response = await fetch(url);
-
       let responseJson = await response.json();
-
+      console.log("09","responseJson",responseJson)
       const successPattern = /^(000\.000\.|000\.100\.1|000\.[36])/;
       const manuallPattern = /^(000\.400\.0[^3]|000\.400\.100)/;
       const match1 = successPattern.test(responseJson.result.code);
       const match2 = manuallPattern.test(responseJson.result.code);
-      console.log(match1, match2);
+      console.log("22",match1, match2);
 
       if (match1 || match2) {
         this.props.navigation.navigate('ThankYou');
@@ -335,9 +356,9 @@ class Payment extends Component {
 
         this.setState({loading: false});
       }
-      //console.log("responseJson", responseJson.result.code, match2, match1)
+      console.log("10","responseJson", responseJson.result.code, match2, match1)
 
-      //console.log("09","responseJson",responseJson.paymentResult)
+      console.log("11","responseJson",responseJson.paymentResult)
     } catch (e) {
       this.setState({loading: false});
       global.openToast(e.toString(), 'e');

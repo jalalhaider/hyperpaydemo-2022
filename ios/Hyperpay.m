@@ -51,13 +51,18 @@ RCT_EXPORT_MODULE(Hyperpay)
                                 completion:(void (^)(PKPaymentAuthorizationStatus))completion {
    OPPApplePayPaymentParams *params = [OPPApplePayPaymentParams applePayPaymentParamsWithCheckoutID:applepayCheckoutId tokenData:payment.token.paymentData error:nil];
   
-  params.shopperResultURL = @"mosab.hyperpay://result";
-    
+     params.shopperResultURL = @"merchant.com.sunbonn.hanaWater1://result";
+  
+  NSLog(@"Payment  %@",payment);
+  NSLog(@"Payment  %@",payment.token);
+  NSLog(@"Params Data %@",params);
     //submit transaction
-    [provider submitTransaction:[OPPTransaction transactionWithPaymentParams:params] completionHandler: ^(OPPTransaction *transaction, NSError *error){
+    OPPTransaction *sdd = [OPPTransaction transactionWithPaymentParams:params];
+    [provider submitTransaction: sdd completionHandler: ^(OPPTransaction *transaction, NSError *error){
       
       if(error){
-        
+        NSLog(@"Error Jalal");
+        NSLog(@"%@",sdd);
         NSLog(@"%@", error.localizedDescription);
 
         completion(PKPaymentAuthorizationStatusFailure);
@@ -87,7 +92,7 @@ RCT_EXPORT_MODULE(Hyperpay)
                 @"status":@"error",
                 @"checkoutId":applepayCheckoutId
                 };
-         resolveG(transactionResult);
+         //resolveG(transactionResult);
 }
 
 
@@ -323,7 +328,7 @@ RCT_EXPORT_METHOD(applepayPayment: (NSDictionary*)options resolver:(RCTPromiseRe
       
       applepayCheckoutId =[options valueForKey:@"checkoutID"] ;
       
-      PKPaymentRequest *request = [OPPPaymentProvider paymentRequestWithMerchantIdentifier:@"merchant.Hyperpay.reactNative1" countryCode:@"SA"];
+      PKPaymentRequest *request = [OPPPaymentProvider paymentRequestWithMerchantIdentifier:@"merchant.com.sunbonn.hanaWater1" countryCode:@"SA"];
 
      // PKPaymentRequest *request = [OPPPaymentProvider paymentRequestWithMerchantIdentifier:@"merchant.Hyperpay.reactNative1" countryCode:@"SA"];
 
@@ -346,16 +351,17 @@ RCT_EXPORT_METHOD(applepayPayment: (NSDictionary*)options resolver:(RCTPromiseRe
 
       NSDecimalNumber *amount2 = [NSDecimalNumber decimalNumberWithMantissa:10000 exponent:-2 isNegative:NO];
 
-       request.paymentSummaryItems = @[[PKPaymentSummaryItem summaryItemWithLabel:@"Hyperpay" amount:amount1]];
-       
-
-      if ([OPPPaymentProvider canSubmitPaymentRequest:request]) {
+       request.paymentSummaryItems = @[[PKPaymentSummaryItem summaryItemWithLabel:@"Awesome App 2" amount:amount1]];
+      NSLog(@"request %@",request);
+      BOOL isAuthorized = [OPPPaymentProvider canSubmitPaymentRequest:request];
+      NSLog(isAuthorized ? @"Yes" : @"No");
+      if (true) {
             PKPaymentAuthorizationViewController *vc = [[PKPaymentAuthorizationViewController alloc] initWithPaymentRequest:request];
         
  
         
         vc.delegate = self;
-        
+
         dispatch_async(dispatch_get_main_queue(), ^{
           
           
