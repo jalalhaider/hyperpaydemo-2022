@@ -170,12 +170,13 @@ class Payment extends Component {
           .then(transactionResult => {
             if (transactionResult) {
               console.log("02","transactionResult from hyperpay",transactionResult);
-              resourcePath = "?checkoutId=" + transactionResult.checkoutId + "&cardType="+ this.state.paymentType[3].icon_name;
-              this.getPaymentStatus(resourcePath);
-           
+              //resourcePath = "?checkoutId=" + transactionResult.checkoutId + "&cardType="+ this.state.paymentType[3].icon_name;
+              //this.getPaymentStatus(resourcePath);
+              this.getPaymentStatus(transactionResult.checkoutId);
               if (transactionResult.status === 'completed') {
-                resourcePath = encodeURIComponent("?checkoutId=" + transactionResult.checkoutId + "cardType="+ this.state.paymentType[3].icon_name);
-                this.getPaymentStatus(resourcePath);
+                //resourcePath = encodeURIComponent("?checkoutId=" + transactionResult.checkoutId + "cardType="+ this.state.paymentType[3].icon_name);
+                //this.getPaymentStatus(resourcePath);
+                this.getPaymentStatus(transactionResult.checkoutId);
               } else {
                 return this.setState({loading: false}, () => {
                   global.openToast('The payment is not completed', 'e');
@@ -334,9 +335,7 @@ class Payment extends Component {
       //     },
       //     body: JSON.stringify({ resourcePath })
       // })
-      let url =
-        'http://192.168.1.104:3000/api/v1/payment/status' +
-        resourcePath;
+      let url = "https://dev.hyperpay.com/hyperpay-demo/getpaymentstatus.php?id="+ resourcePath
       console.log('08', url);
 
       let response = await fetch(url);
